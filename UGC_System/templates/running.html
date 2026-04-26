@@ -1,0 +1,313 @@
+﻿{% extends "base.html" %}
+{% block content %}
+{% set stage_results = state.stage_results or {} %}
+{% set analysis_data = summary.analysis if summary else stage_results.get('analysis', {}) %}
+{% set cleaning_data = summary.cleaning if summary else stage_results.get('cleaning', {}) %}
+{% set alpha_data = summary.alpha if summary else stage_results.get('alpha', {}) %}
+{% set preprocess_data = summary.preprocess if summary else stage_results.get('preprocess', {}) %}
+{% set calibration_data = summary.calibration if summary else stage_results.get('calibration', {}) %}
+{% set ugc_data = summary.ugc if summary else stage_results.get('ugc', {}) %}
+{% set label_type_value = analysis_data.label_type if analysis_data else None %}
+{% set calibration_iterations = calibration_data.get('iterations', []) if calibration_data else [] %}
+{% set calibration_bin_width = calibration_data.get('recommended_bin_width') if calibration_data else none %}
+{% set calibration_actual_ratio = calibration_data.get('actual_ratio') if calibration_data else none %}
+{% set calibration_mode = calibration_data.get('mode') if calibration_data else none %}
+{% set calibration_skipped = calibration_data.get('skipped') if calibration_data else false %}
+<section class="hero hero--compact">
+  <div>
+    <p class="eyebrow">Page 2</p>
+    <h1>流程运行页</h1>
+    <p class="hero__text">当前实验编号：{{ run_id }}{% if dataset_display_name %} · 数据集：{{ dataset_display_name }}{% endif %}</p>
+  </div>
+  {% if state.status == 'completed' %}
+  <a class="button-link" href="{{ url_for('result_page', run_id=run_id) }}">查看粗化结果页</a>
+  {% endif %}
+</section>
+
+<section class="stats-grid">
+  <article class="metric-card">
+    <span>当前状态</span>
+    <strong>{{ state.status }}</strong>
+  </article>
+  <article class="metric-card">
+    <span>数据集</span>
+    <strong>{{ dataset_display_name }}</strong>
+  </article>
+  <article class="metric-card">
+    <span>标签处理策略</span>
+    <strong>{{ state.form_data.strategy | upper }}</strong>
+  </article>
+  <article class="metric-card">
+    <span>目标压缩率</span>
+    <strong>{{ state.form_data.target_ratio }}%</strong>
+  </article>
+</section>
+
+<section class="running-grid">
+  <article class="panel stage-panel stage-panel--wide">
+    <div class="section-title">数据分析</div>
+    <div class="stage-badge stage-badge--{{ stage_results.get('analysis', {}).get('status', 'pending') }}">{{ stage_results.get('analysis', {}).get('status', 'pending') }}</div>
+    <div class="analysis-table-wrap">
+      <table class="analysis-table">
+          <tr>
+            <th>节点数</th>
+            <th>边数</th>
+            <th>平均度</th>
+            <th>最大度</th>
+            <th>特征维度</th>
+            <th>标签类型</th>
+            <th>标签维度</th>
+          </tr>
+          <tr>
+            <td>{{ analysis_data.num_nodes if analysis_data else '-' }}</td>
+            <td>{{ analysis_data.num_edges if analysis_data else '-' }}</td>
+            <td>{% if analysis_data and analysis_data.avg_degree is not none %}{{ '%.4f'|format(analysis_data.avg_degree) }}{% else %}-{% endif %}</td>
+            <td>{{ analysis_data.max_degree if analysis_data else '-' }}</td>
+            <td>{{ analysis_data.feature_dim if analysis_data else '-' }}</td>
+            <td>{% if label_type_value == 'multi' %}多标签{% elif label_type_value == 'single' %}单标签{% else %}-{% endif %}</td>
+            <td>{{ analysis_data.label_dim if analysis_data else '-' }}</td>
+          </tr>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel stage-panel stage-panel--wide">
+    <div class="section-title">数据清洗</div>
+    <div class="stage-badge stage-badge--{{ stage_results.get('cleaning', {}).get('status', 'pending') }}">{{ stage_results.get('cleaning', {}).get('status', 'pending') }}</div>
+    {% if cleaning_data and cleaning_data.skipped %}
+    <div class="builtin-calibration-card">
+      <p>当前数据集无需清洗{% if cleaning_data.reason %}：{{ cleaning_data.reason }}{% endif %}。</p>
+    </div>
+    {% else %}
+    <div class="data-grid result-overview-grid">
+      <div><span>清洗前节点数</span><strong>{{ cleaning_data.num_nodes_before if cleaning_data else '-' }}</strong></div>
+      <div><span>清洗后节点数</span><strong>{{ cleaning_data.num_nodes_after if cleaning_data else '-' }}</strong></div>
+      <div><span>清洗前边数</span><strong>{{ cleaning_data.num_edges_before if cleaning_data else '-' }}</strong></div>
+      <div><span>清洗后边数</span><strong>{{ cleaning_data.num_edges_after if cleaning_data else '-' }}</strong></div>
+      <div><span>移除无标签节点</span><strong>{{ cleaning_data.removed_unlabeled_nodes if cleaning_data else '-' }}</strong></div>
+      <div><span>移除重复单向边</span><strong>{{ cleaning_data.removed_duplicate_edges if cleaning_data else '-' }}</strong></div>
+    </div>
+    {% endif %}
+  </article>
+
+  <div class="inline-stage-row">
+    <article class="panel stage-panel">
+      <div class="section-title">计算 Alpha</div>
+      <div class="stage-badge stage-badge--{{ stage_results.get('alpha', {}).get('status', 'pending') }}">{{ stage_results.get('alpha', {}).get('status', 'pending') }}</div>
+      <div class="stage-value-block">
+        <span>求得 Alpha 值</span>
+        <strong>{% if alpha_data and alpha_data.alpha is not none %}{{ '%.6f'|format(alpha_data.alpha) }}{% else %}-{% endif %}</strong>
+      </div>
+    </article>
+
+    <article class="panel stage-panel">
+      <div class="section-title">数据预处理</div>
+      <div class="stage-badge stage-badge--{{ stage_results.get('preprocess', {}).get('status', 'pending') }}">{{ stage_results.get('preprocess', {}).get('status', 'pending') }}</div>
+      <div class="file-status-list">
+        <div class="file-status-item">
+          <span>edge_index.pt</span>
+          <strong>{% if preprocess_data and preprocess_data.edge_index_path %}已生成{% else %}等待生成{% endif %}</strong>
+        </div>
+        <div class="file-status-item">
+          <span>node_feat.pt</span>
+          <strong>{% if preprocess_data and preprocess_data.node_feat_path %}已生成{% else %}等待生成{% endif %}</strong>
+        </div>
+        <div class="file-status-item">
+          <span>label.pt</span>
+          <strong>{% if preprocess_data and preprocess_data.label_path %}已生成{% else %}等待生成{% endif %}</strong>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel stage-panel stage-panel--wide">
+    <div class="section-title">标定 Bin Width</div>
+    <div class="stage-badge stage-badge--{{ stage_results.get('calibration', {}).get('status', 'pending') }}">{{ stage_results.get('calibration', {}).get('status', 'pending') }}</div>
+    {% if calibration_data and calibration_iterations %}
+    <div class="calibration-layout">
+      <div class="chart-shell">
+        <div id="calibration-chart" class="chart chart--compact"></div>
+        <button type="button" class="chart-zoom-button" id="open-calibration-chart-modal" aria-label="放大查看标定图">放大</button>
+      </div>
+      <div class="detail-card detail-card--compact">
+        <div class="calibration-summary-line"><span>最终确定的桶宽</span><strong>{{ '%.6f'|format(calibration_bin_width) }}</strong></div>
+        <div class="calibration-summary-line"><span>对应实际压缩率</span><strong>{% if calibration_actual_ratio is not none %}{{ '%.4f'|format(calibration_actual_ratio) }}%{% else %}-{% endif %}</strong></div>
+        <div class="calibration-summary-line"><span>目标压缩率</span><strong>{{ state.form_data.target_ratio }}%</strong></div>
+      </div>
+    </div>
+    {% elif calibration_data and (calibration_mode == 'builtin' or calibration_skipped) and calibration_bin_width is not none %}
+    <div class="builtin-calibration-card">
+      <p>内置数据集已有标定桶宽，为 <strong>{{ '%.6f'|format(calibration_bin_width) }}</strong>。</p>
+    </div>
+    {% elif calibration_data and calibration_bin_width is not none %}
+    <div class="builtin-calibration-card">
+      <p>桶宽标定未产出可绘制曲线。当前结果为 <strong>{{ '%.6f'|format(calibration_bin_width) }}</strong>，请结合下方日志检查是否有报错。</p>
+    </div>
+    {% else %}
+    <p class="note">等待标定结果生成。</p>
+    {% endif %}
+  </article>
+
+  <article class="panel stage-panel stage-panel--wide">
+    <div class="section-title">运行 UGC 粗化</div>
+    <div class="stage-badge stage-badge--{{ stage_results.get('ugc', {}).get('status', 'pending') }}">{{ stage_results.get('ugc', {}).get('status', 'pending') }}</div>
+    <div class="ugc-metrics-row">
+      <div class="stage-value-block stage-value-block--compact">
+        <span>原始节点数</span>
+        <strong>{{ ugc_data.original_nodes if ugc_data and ugc_data.original_nodes is not none else '-' }}</strong>
+      </div>
+      <div class="stage-value-block stage-value-block--compact">
+        <span>压缩后节点数</span>
+        <strong>{{ ugc_data.supernodes if summary and ugc_data.supernodes is not none else (ugc_data.compressed_nodes if ugc_data and ugc_data.compressed_nodes is not none else '-') }}</strong>
+      </div>
+      <div class="stage-value-block stage-value-block--compact">
+        <span>实际压缩率</span>
+        <strong>{% if ugc_data and ugc_data.reduction_percent is not none %}{{ '%.4f'|format(ugc_data.reduction_percent) }}%{% else %}-{% endif %}</strong>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="section-title">日志输出</div>
+  <pre class="log log--tall">{% for line in state.log_lines %}{{ line }}
+{% endfor %}{% if state.error %}
+ERROR: {{ state.error }}{% endif %}</pre>
+</section>
+{% if calibration_data and calibration_iterations %}
+<div class="chart-modal" id="calibration-chart-modal" hidden>
+  <div class="chart-modal__backdrop" data-chart-close="true"></div>
+  <div class="chart-modal__panel">
+    <div class="chart-modal__header">
+      <strong>标定 Bin Width 结果图</strong>
+      <button type="button" class="chart-modal__close" id="close-calibration-chart-modal" aria-label="关闭放大图">关闭</button>
+    </div>
+    <div id="calibration-chart-large" class="chart chart--large"></div>
+  </div>
+</div>
+<script>
+  window.__CALIBRATION_SERIES__ = {{ calibration_iterations | tojson }};
+  window.__CALIBRATION_TARGET__ = {{ state.form_data.target_ratio | tojson }};
+</script>
+<script>
+  (function () {
+    const chartDom = document.getElementById('calibration-chart');
+    const largeChartDom = document.getElementById('calibration-chart-large');
+    const openModalButton = document.getElementById('open-calibration-chart-modal');
+    const closeModalButton = document.getElementById('close-calibration-chart-modal');
+    const modal = document.getElementById('calibration-chart-modal');
+    if (!chartDom || !window.echarts || !window.__CALIBRATION_SERIES__) {
+      return;
+    }
+    const series = window.__CALIBRATION_SERIES__;
+    const target = Number(window.__CALIBRATION_TARGET__);
+    function buildOption() {
+      return {
+        animation: false,
+        grid: { left: 88, right: 86, top: 40, bottom: 60, containLabel: false },
+        tooltip: {
+          trigger: 'axis',
+          formatter(params) {
+            const point = params && params[0] ? params[0].data : null;
+            if (!point) {
+              return '';
+            }
+            return '第 ' + point.iteration + ' 次实验<br/>桶宽：' + point.binWidth + '<br/>压缩率：' + point.value + '%';
+          },
+        },
+        xAxis: {
+          type: 'category',
+          name: '实验顺序',
+          nameLocation: 'middle',
+          nameGap: 34,
+          data: series.map(function (item) {
+            return '第' + item.iteration + '次';
+          }),
+          axisLabel: {
+            interval: 0,
+          },
+        },
+        yAxis: {
+          type: 'value',
+          name: '压缩率 (%)',
+          nameLocation: 'middle',
+          nameGap: 62,
+        },
+        series: [
+          {
+            type: 'line',
+            smooth: false,
+            symbolSize: 8,
+            lineStyle: { width: 3, color: '#2d6aa6' },
+            itemStyle: { color: '#2d6aa6' },
+            data: series.map(function (item) {
+              return {
+                value: item.actual_ratio,
+                iteration: item.iteration,
+                binWidth: item.bin_width,
+              };
+            }),
+            markLine: {
+              symbol: 'none',
+              lineStyle: { color: '#b54a2d', width: 2, type: 'solid' },
+              label: {
+                formatter: '目标压缩率: ' + target + '%',
+                distance: 18,
+                position: 'insideEndTop',
+              },
+              data: [{ yAxis: target }],
+            },
+          },
+        ],
+      };
+    }
+    const chart = window.echarts.init(chartDom);
+    chart.setOption(buildOption());
+    let largeChart = null;
+    function openModal() {
+      if (!modal || !largeChartDom) {
+        return;
+      }
+      modal.hidden = false;
+      document.body.classList.add('modal-open');
+      if (!largeChart) {
+        largeChart = window.echarts.init(largeChartDom);
+      }
+      largeChart.setOption(buildOption());
+      largeChart.resize();
+    }
+    function closeModal() {
+      if (!modal) {
+        return;
+      }
+      modal.hidden = true;
+      document.body.classList.remove('modal-open');
+    }
+    if (openModalButton) {
+      openModalButton.addEventListener('click', openModal);
+    }
+    if (closeModalButton) {
+      closeModalButton.addEventListener('click', closeModal);
+    }
+    if (modal) {
+      modal.addEventListener('click', function (event) {
+        if (event.target && event.target.dataset && event.target.dataset.chartClose === 'true') {
+          closeModal();
+        }
+      });
+    }
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && modal && !modal.hidden) {
+        closeModal();
+      }
+    });
+    window.addEventListener('resize', function () {
+      chart.resize();
+      if (largeChart) {
+        largeChart.resize();
+      }
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

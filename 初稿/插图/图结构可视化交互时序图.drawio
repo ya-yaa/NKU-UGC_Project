@@ -1,0 +1,258 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="第 1 页" id="Ts9_cahw7NbQdpFMDnwU">
+    <mxGraphModel dx="276" dy="176" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-1" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1147" y="680" as="sourcePoint" />
+            <mxPoint x="1146.96" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-2" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="988" y="680" as="sourcePoint" />
+            <mxPoint x="987.58" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-3" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="828" y="680" as="sourcePoint" />
+            <mxPoint x="828" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-4" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="&lt;b&gt;用户&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="28" x="652" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="10" width="151.62" x="752.2" y="453.3" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-6" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="668" y="400" as="sourcePoint" />
+            <mxPoint x="822" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-7" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-6" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=default;" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;1.进入粗化结果页面&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.025" y="3" as="geometry">
+            <mxPoint y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-8" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="667" y="680" as="sourcePoint" />
+            <mxPoint x="666.58" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fillColor=#d5e8d4;strokeColor=#82b366;" value="" vertex="1">
+          <mxGeometry height="10" width="95.43" x="940.28" y="425.24" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-10" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="833" y="404.75" as="sourcePoint" />
+            <mxPoint x="983" y="404.75" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-11" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;2.请求粗图可视化数据&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0444" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fillColor=#e1d5e7;strokeColor=#9673a6;" value="" vertex="1">
+          <mxGeometry height="10" width="89.25" x="1103.38" y="422.12" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-13" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="993" y="408.75" as="sourcePoint" />
+            <mxPoint x="1143" y="408.75" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-14" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;3.读取粗图结构数据&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0333" y="3" as="geometry">
+            <mxPoint y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-15" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-12" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1140" y="427" as="sourcePoint" />
+            <mxPoint x="994" y="427" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-16" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-15" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;4.返回超节点和超边信息&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" value="前端页面" vertex="1">
+          <mxGeometry height="40" width="80" x="788.01" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-19" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" value="后端服务" vertex="1">
+          <mxGeometry height="40" width="80" x="948" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-20" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" value="数据存储" vertex="1">
+          <mxGeometry height="40" width="80" x="1107.38" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#CD9052;" value="初始化与粗图加载" vertex="1">
+          <mxGeometry height="40" width="118" x="520" y="438.3" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;labelBorderColor=none;fontColor=#4D9900;" value="超节点交互&lt;div&gt;与&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(77, 153, 0), rgb(88, 153, 22));&quot;&gt;详情展示&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="118" x="520" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-25" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;exitX=0.267;exitY=-0.087;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;exitPerimeter=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="993.8649999999998" y="445.17689000000007" as="sourcePoint" />
+            <mxPoint x="1143.005" y="445.4325" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-26" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-25" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;5.读取超节点映射关系&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.0333" y="3" as="geometry">
+            <mxPoint y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-66" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.909;exitY=1.1;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1142.005" y="462.62325" as="sourcePoint" />
+            <mxPoint x="994" y="463" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-67" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-66" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;6.返回超节点成员信息&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-68" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-9" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.914;exitY=0.964;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.575;entryY=-0.066;entryDx=0;entryDy=0;entryPerimeter=0;" target="BbeTQkaomYu_OWdQRvLt-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="978.0050000000001" y="470" as="sourcePoint" />
+            <mxPoint x="830" y="470.37675" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-69" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-68" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;7.返回图结构和映射数据&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-71" edge="1" parent="1" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="863.01" y="511.12" />
+            </Array>
+            <mxPoint x="833.01" y="487.12" as="sourcePoint" />
+            <mxPoint x="833.01" y="511.12" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-72" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-71" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;8.渲染超节点和超边&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.5867" as="geometry">
+            <mxPoint x="50" y="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-73" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-5" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.926;exitY=0.977;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="818" y="523" as="sourcePoint" />
+            <mxPoint x="668" y="524" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-74" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-73" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;9.展示粗图可视化结果&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-75" parent="1" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="10" width="117.32" x="769.66" y="603.05" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-77" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.06;entryY=1.032;entryDx=0;entryDy=0;entryPerimeter=0;" target="BbeTQkaomYu_OWdQRvLt-75" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="670" y="556" as="sourcePoint" />
+            <mxPoint x="824" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-78" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-77" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=default;" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;10.点击某个超节点&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.025" y="3" as="geometry">
+            <mxPoint y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-79" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-75" style="endArrow=classic;html=1;rounded=0;exitX=0.117;exitY=-0.023;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.166;entryY=0.874;entryDx=0;entryDy=0;entryPerimeter=0;" target="BbeTQkaomYu_OWdQRvLt-81" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="860" y="580" as="sourcePoint" />
+            <mxPoint x="980" y="563" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-80" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-79" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=default;" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;11.请求超节点详情&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.025" y="3" as="geometry">
+            <mxPoint y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-81" parent="1" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fillColor=#d5e8d4;strokeColor=#82b366;" value="" vertex="1">
+          <mxGeometry height="10" width="57.72" x="959.13" y="576.57" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fillColor=#e1d5e7;strokeColor=#9673a6;" value="" vertex="1">
+          <mxGeometry height="10" width="39.87" x="1127.45" y="576.63" as="geometry" />
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-84" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-81" style="endArrow=classic;html=1;rounded=0;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.142;entryY=1.008;entryDx=0;entryDy=0;entryPerimeter=0;" target="BbeTQkaomYu_OWdQRvLt-17" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1000" y="570" as="sourcePoint" />
+            <mxPoint x="1140" y="571" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-85" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-84" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=default;" value="&lt;span style=&quot;font-size: 10px;&quot;&gt;12.读取超节点成员、&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;标签分布、邻接信息&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.025" y="3" as="geometry">
+            <mxPoint y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-86" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-17" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="BbeTQkaomYu_OWdQRvLt-81" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1142.375" y="598.9675" as="sourcePoint" />
+            <mxPoint x="1000" y="595" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-87" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-86" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;13.返回超节点详情&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-88" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-81" style="endArrow=classic;html=1;rounded=0;dashed=1;entryX=0.459;entryY=-0.072;entryDx=0;entryDy=0;exitX=0.883;exitY=1.026;exitDx=0;exitDy=0;exitPerimeter=0;entryPerimeter=0;" target="BbeTQkaomYu_OWdQRvLt-75" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="970" y="610" as="sourcePoint" />
+            <mxPoint x="840" y="611" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-89" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-88" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;14.返回超节点详情&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-90" edge="1" parent="1" style="edgeStyle=elbowEdgeStyle;elbow=horizontal;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="863.01" y="642.03" />
+            </Array>
+            <mxPoint x="833.01" y="618.03" as="sourcePoint" />
+            <mxPoint x="833.01" y="642.03" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-91" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-90" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;15.更新详情面板&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;和高亮显示&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.5867" as="geometry">
+            <mxPoint x="53" y="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-92" edge="1" parent="1" source="BbeTQkaomYu_OWdQRvLt-75" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.873;exitY=0.952;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="820.7899999999997" y="652.39696" as="sourcePoint" />
+            <mxPoint x="668" y="652" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-93" connectable="0" parent="BbeTQkaomYu_OWdQRvLt-92" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;16.展示超节点详情&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;和关联关系&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.0222" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="BbeTQkaomYu_OWdQRvLt-95" edge="1" parent="1" style="endArrow=none;dashed=1;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="650" y="540" as="sourcePoint" />
+            <mxPoint x="1200" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

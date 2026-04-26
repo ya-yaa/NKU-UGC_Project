@@ -1,0 +1,154 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<section class="hero hero--compact">
+  <div>
+    <p class="eyebrow">Page 4</p>
+    <h1>GNN 测试页面</h1>
+    <p class="hero__text">数据集：{{ dataset_display_name }}。基于刚刚确定的粗化参数，切换 GNN 模型和训练轮数再次测试。</p>
+  </div>
+  <a class="button-link" href="{{ url_for('result_page', run_id=run_id) }}">返回结果页</a>
+</section>
+
+<section class="panel panel--grid">
+  <form method="post" class="form" id="gnn-test-form">
+    <div class="section-title">测试参数</div>
+    <label>GNN 模型</label>
+    <select name="model_type">
+      {% for model in models %}
+      <option value="{{ model.key }}">{{ model.label }}</option>
+      {% endfor %}
+    </select>
+
+    <label>训练轮数</label>
+    <input type="number" name="epochs" value="10">
+
+    <button type="submit" id="gnn-test-submit">开始测试</button>
+  </form>
+
+  <aside class="sidecard">
+    <div class="section-title">当前粗化参数</div>
+    <div class="data-grid">
+      <div><span>数据集</span><strong>{{ dataset_display_name }}</strong></div>
+      <div><span>策略</span><strong>{{ result.strategy }}</strong></div>
+      <div><span>Alpha</span><strong>{{ "%.4f"|format(result.alpha.alpha) }}</strong></div>
+      <div><span>Bin Width</span><strong>{{ "%.6f"|format(result.calibration.recommended_bin_width) }}</strong></div>
+      <div><span>实际压缩率</span><strong>{{ "%.2f"|format(result.ugc.reduction_percent or 0) }}%</strong></div>
+    </div>
+  </aside>
+</section>
+
+<div class="loading-overlay" id="gnn-test-overlay" aria-hidden="true">
+  <div class="loading-overlay__panel">
+    <div class="loading-overlay__spinner"></div>
+    <div class="loading-overlay__title">GNN 测试进行中</div>
+    <div class="loading-overlay__text" id="gnn-progress-text">模型正在训练与评估，请稍后…</div>
+    <div class="loading-progress">
+      <div class="loading-progress__bar"></div>
+    </div>
+  </div>
+</div>
+
+<section class="panel panel--grid panel--wide">
+  <div>
+    <div class="section-title">最近一次测试结果</div>
+    {% if latest_test %}
+    <div class="data-grid">
+      <div><span>模型</span><strong>{{ latest_test.model_type }}</strong></div>
+      <div><span>训练轮数</span><strong>{{ latest_test.epochs }}</strong></div>
+      <div><span>压缩率</span><strong>{{ "%.2f"|format(latest_test.result.reduction_percent or 0) }}%</strong></div>
+      <div><span>平均准确率</span><strong>{{ "%.4f"|format(latest_test.result.average_accuracy or 0) }}</strong></div>
+    </div>
+    <div class="section-title" style="margin-top: 1rem;">实验日志</div>
+    <pre class="log">{{ latest_test.result.stdout }}</pre>
+    {% else %}
+    <p>还没有执行额外的 GNN 测试。</p>
+    {% endif %}
+  </div>
+  <div>
+    <div class="section-title">历史记录</div>
+    {% if tests %}
+    <ul class="flat-list">
+      {% for test in tests %}
+      <li>{{ test.test_id }} | {{ test.model_type }} | {{ test.epochs }} epochs | acc {{ "%.4f"|format(test.result.average_accuracy or 0) }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>暂无历史记录。</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const form = document.getElementById('gnn-test-form');
+    const overlay = document.getElementById('gnn-test-overlay');
+    const submitButton = document.getElementById('gnn-test-submit');
+    const progressText = document.getElementById('gnn-progress-text');
+    if (!form || !overlay) {
+      return;
+    }
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      document.body.classList.add('page-loading');
+      overlay.classList.add('is-visible');
+      overlay.setAttribute('aria-hidden', 'false');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = '测试中...';
+      }
+      if (progressText) {
+        progressText.textContent = '任务已提交，准备开始训练…';
+      }
+      const response = await fetch(form.action || window.location.href, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) {
+        if (progressText) {
+          progressText.textContent = payload.error || '测试任务提交失败。';
+        }
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = '开始测试';
+        }
+        return;
+      }
+      const poll = async () => {
+        const stateResp = await fetch(payload.state_url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+        const state = await stateResp.json();
+        if (progressText) {
+          if (state.status === 'running' || state.status === 'queued') {
+            const current = Number(state.current_epoch || 0);
+            const total = Number(state.epochs || 0);
+            progressText.textContent = total > 0 ? `第 ${current} 轮 / 共 ${total} 轮` : (state.latest_line || '训练进行中…');
+          } else if (state.status === 'failed') {
+            progressText.textContent = state.error || '测试失败。';
+          } else if (state.status === 'completed') {
+            progressText.textContent = '训练完成，正在刷新页面…';
+          }
+        }
+        if (state.status === 'completed') {
+          window.location.href = payload.refresh_url;
+          return;
+        }
+        if (state.status === 'failed') {
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = '开始测试';
+          }
+          return;
+        }
+        window.setTimeout(poll, 800);
+      };
+      window.setTimeout(poll, 600);
+    });
+  })();
+</script>
+{% endblock %}

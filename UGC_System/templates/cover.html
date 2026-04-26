@@ -1,0 +1,12 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<section class="cover">
+  <p class="eyebrow">UGC Visual System</p>
+  <h1>欢迎使用UGC图粗化系统！</h1>
+  <p class="hero__text cover__text">选择一种进入方式，开始使用内置数据集实验，或上传你自己的图数据集进行粗化分析。</p>
+  <div class="cover__actions">
+    <a class="button-link" href="{{ url_for('upload_page') }}">使用内置数据集</a>
+    <a class="button-link button-link--alt" href="{{ url_for('upload_page', entry_mode='upload') }}">上传个人数据集</a>
+  </div>
+</section>
+{% endblock %}

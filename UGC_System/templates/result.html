@@ -1,0 +1,141 @@
+﻿{% extends "base.html" %}
+{% block content %}
+{% set coarse_meta = graph_preview.meta if graph_preview and graph_preview.meta else {} %}
+<section class="hero hero--compact">
+  <div>
+    <p class="eyebrow">Page 3</p>
+    <h1>粗化结果页</h1>
+    <p class="hero__text">实验编号：{{ result.run_id }}，数据集：{{ dataset_display_name }}。当前展示粗化概览、粗图预览和映射关系。GNN 测试可在下一页单独执行。</p>
+  </div>
+  <div class="hero-actions">
+    <a class="button-link" href="{{ url_for('gnn_test_page', run_id=result.run_id) }}">进入 GNN 测试页</a>
+    {% if result.ugc.exports_pt_dir %}
+    <a class="button-link button-link--alt" href="{{ url_for('download_export', run_id=result.run_id, export_kind='pt') }}">下载 PT 导出</a>
+    {% endif %}
+    {% if result.ugc.exports_text_dir %}
+    <a class="button-link button-link--alt" href="{{ url_for('download_export', run_id=result.run_id, export_kind='text') }}">下载文本导出</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="stats-grid">
+  <article class="metric-card"><span>Alpha</span><strong>{{ "%.4f"|format(result.alpha.alpha) }}</strong></article>
+  <article class="metric-card"><span>Bin Width</span><strong>{{ "%.6f"|format(result.calibration.recommended_bin_width) }}</strong></article>
+  <article class="metric-card"><span>压缩率</span><strong>{{ "%.2f"|format(result.ugc.reduction_percent or 0) }}%</strong></article>
+  <article class="metric-card"><span>平均纯度</span><strong>{% if coarse_meta.average_purity is not none %}{{ "%.4f"|format(coarse_meta.average_purity) }}{% else %}-{% endif %}</strong></article>
+</section>
+
+<section class="panel">
+  <div>
+    <div class="section-title">粗化结果概览</div>
+    <div class="data-grid result-overview-grid">
+      <div><span>数据集</span><strong>{{ dataset_display_name }}</strong></div>
+      <div><span>策略</span><strong>{{ result.strategy | upper }}</strong></div>
+      <div><span>原始节点</span><strong>{{ result.ugc.original_nodes or result.preprocess.num_nodes }}</strong></div>
+      <div><span>Supernodes</span><strong>{{ result.coarsening.num_supernodes if result.coarsening else (result.ugc.supernodes or '-') }}</strong></div>
+      <div><span>特征维度</span><strong>{{ result.preprocess.feature_size }}</strong></div>
+      <div><span>类别数</span><strong>{{ result.preprocess.num_classes }}</strong></div>
+      <div><span>实际压缩率</span><strong>{{ "%.2f"|format(result.ugc.reduction_percent or 0) }}%</strong></div>
+      <div><span>准确率</span><strong>{% if gnn_tests %}{{ "%.4f"|format(gnn_tests[0].result.average_accuracy or 0) }}{% elif result.ugc.average_accuracy is not none %}{{ "%.4f"|format(result.ugc.average_accuracy) }}{% else %}未测试{% endif %}</strong></div>
+      <div><span>平均纯度 AvgPurity</span><strong>{% if coarse_meta.average_purity is not none %}{{ "%.4f"|format(coarse_meta.average_purity) }}{% else %}-{% endif %}</strong></div>
+      <div><span>低纯度比例</span><strong>{% if coarse_meta.low_purity_ratio is not none %}{{ "%.4f"|format(coarse_meta.low_purity_ratio) }}{% else %}-{% endif %}</strong></div>
+      <div><span>纯度阈值 τ</span><strong>{% if coarse_meta.purity_threshold is not none %}{{ "%.2f"|format(coarse_meta.purity_threshold) }}{% else %}-{% endif %}</strong></div>
+      <div><span>GNN 状态</span><strong>{% if result.ugc.coarsen_only %}未测试{% else %}已完成{% endif %}</strong></div>
+    </div>
+  </div>
+</section>
+
+{% if spectral_metrics %}
+<section class="panel">
+  <div>
+    <div class="section-title">谱性质对比</div>
+    <div class="data-grid result-overview-grid">
+      <div><span>特征值对比数量</span><strong>{{ spectral_metrics.k_eigen or '-' }}</strong></div>
+      <div><span>平均特征值误差</span><strong>{% if spectral_metrics.eigen_error_mean is not none %}{{ '%.6f'|format(spectral_metrics.eigen_error_mean) }}{% else %}-{% endif %}</strong></div>
+      <div><span>最大特征值误差</span><strong>{% if spectral_metrics.eigen_error_max is not none %}{{ '%.6f'|format(spectral_metrics.eigen_error_max) }}{% else %}-{% endif %}</strong></div>
+      <div><span>最小特征值误差</span><strong>{% if spectral_metrics.eigen_error_min is not none %}{{ '%.6f'|format(spectral_metrics.eigen_error_min) }}{% else %}-{% endif %}</strong></div>
+      <div><span>双曲误差</span><strong>{% if spectral_metrics.hyperbolic_error is not none %}{{ '%.6f'|format(spectral_metrics.hyperbolic_error) }}{% else %}-{% endif %}</strong></div>
+      <div><span>DE 相对误差</span><strong>{% if spectral_metrics.dirichlet_energy is not none %}{{ '%.6f'|format(spectral_metrics.dirichlet_energy) }}{% else %}-{% endif %}</strong></div>
+      <div><span>计算状态</span><strong>{{ '已完成' if spectral_metrics.enabled else '未开启' }}</strong></div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel panel--grid panel--wide">
+  <div>
+    <div class="section-title">粗图预览</div>
+    <div class="inline-controls">
+      <label class="field-inline" for="edge-percentile-input">
+        <span>显示边百分比</span>
+        <input id="edge-percentile-input" type="number" min="1" max="100" step="1" value="5">
+      </label>
+      <button id="edge-percentile-apply" class="button-link button-link--alt" type="button">更新视图</button>
+    </div>
+    <div class="graph-loading-shell">
+      <div id="graph-preview-loading" class="graph-loading-message">图片渲染中，请稍后…</div>
+      <button type="button" class="chart-zoom-button" id="graph-preview-fullscreen" aria-label="放大查看粗图预览">放大</button>
+      <div id="graph-preview" class="graph-canvas"></div>
+    </div>
+    <p id="graph-visibility-note" class="graph-note">为了可视化效果，这里只显示了高权重边子集。</p>
+  </div>
+  <div>
+    <div class="section-title">Supernode 详情</div>
+    <div id="supernode-detail" class="detail-card">
+      <strong>点击左侧节点查看详情</strong>
+      <p>这里会显示聚合后的成员节点预览、主标签分布和邻接 supernode。</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel panel--grid panel--wide">
+  <div>
+    <div class="section-title">原图映射联动视图</div>
+    <div class="graph-loading-shell">
+      <div id="original-graph-preview-loading" class="graph-loading-message">图片渲染中，请稍后…</div>
+      <button type="button" class="chart-zoom-button" id="original-graph-preview-fullscreen" aria-label="放大查看原图映射联动视图">放大</button>
+      <div id="original-graph-preview" class="graph-canvas"></div>
+    </div>
+  </div>
+  <div>
+    <div class="section-title">原始节点说明</div>
+    <div id="original-node-detail" class="detail-card">
+      <strong>点击 coarse supernode 后，这里会联动显示其对应原始节点</strong>
+      <p>红色节点表示属于当前 supernode 的原始节点，蓝灰色节点表示上下文邻居。</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-title">UGC 粗化日志</div>
+  <pre class="log log--tall">{{ result.ugc.stdout }}</pre>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.__GRAPH_PREVIEW__ = {{ graph_preview|tojson }};
+  window.__MAPPING_API__ = {
+    nodeUrlTemplate: {{ mapping_node_url_template|tojson }},
+    edgeUrlTemplate: {{ mapping_edge_url_template|tojson }}
+  };
+  const startGraphPreviewRender = () => {
+    initGraphPreview(
+      'graph-preview',
+      'supernode-detail',
+      'original-graph-preview',
+      'original-node-detail',
+      window.__GRAPH_PREVIEW__,
+      window.__MAPPING_API__
+    );
+  };
+
+  if (window.requestAnimationFrame) {
+    window.requestAnimationFrame(() => {
+      window.setTimeout(startGraphPreviewRender, 0);
+    });
+  } else {
+    window.setTimeout(startGraphPreviewRender, 0);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,402 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Page 1</p>
+    {% if entry_mode == 'builtin' %}
+    <h1>选择内置数据集并配置 UGC 粗化流程</h1>
+    <p class="hero__text">当前模式使用系统内置数据集，不需要上传文件。你可以直接选择数据集并配置粗化参数。</p>
+    {% else %}
+    <h1>上传个人数据集并配置 UGC 粗化流程</h1>
+    <p class="hero__text">请输入你的数据集名称，并上传边集、标签和特征文件。当前后端要求特征文件为 `.npz`。</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel panel--grid">
+  <form method="post" action="{{ url_for('create_experiment') }}" class="form" enctype="multipart/form-data" id="experiment-form">
+    <input type="hidden" name="entry_mode" value="{{ entry_mode }}">
+    {% if error %}
+    <div class="sidecard">{{ error }}</div>
+    {% endif %}
+    <div class="section-title">数据输入</div>
+
+    {% if entry_mode == 'builtin' %}
+    <label for="dataset-select">内置数据集</label>
+    <select name="dataset" id="dataset-select">
+      {% for dataset in datasets %}
+      <option value="{{ dataset }}" {% if dataset.lower() == 'facebook' %}selected{% endif %}>{{ dataset }}</option>
+      {% endfor %}
+    </select>
+    <p id="builtin-dataset-note" class="note" style="display:none;"></p>
+    {% else %}
+    <label for="dataset-name-input">数据集名称</label>
+    <input type="text" name="dataset_name" id="dataset-name-input" placeholder="例如 my_social_graph">
+
+    <label>边集文件</label>
+    <input type="file" name="edge_file" id="edge-file-input" accept=".txt">
+
+    <label>标签文件</label>
+    <input type="file" name="label_file" id="label-file-input" accept=".txt">
+
+    <label>特征文件</label>
+    <input type="file" name="feature_file" id="feature-file-input" accept=".npz">
+    {% endif %}
+
+    <div class="section-title">流程参数</div>
+    <div id="label-type-group">
+      <label for="label-type-select">数据集标签类型</label>
+      <select name="label_type" id="label-type-select">
+        <option value="multi" selected>多标签</option>
+        <option value="single">单标签</option>
+      </select>
+    </div>
+
+    <div id="strategy-group">
+      <label for="strategy-select">多标签策略</label>
+      <select name="strategy" id="strategy-select">
+        {% for strategy in strategies %}
+        <option value="{{ strategy.key }}" {% if strategy.key == 'v4' %}selected{% endif %}>{{ strategy.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <label>是否无向化</label>
+    <select name="undirected">
+      <option value="auto" selected>自动</option>
+      <option value="true">是</option>
+      <option value="false">否</option>
+    </select>
+
+    <div id="target-ratio-input-group">
+      <label for="target-ratio-input">Target Ratio</label>
+      <input type="number" step="1" name="target_ratio" id="target-ratio-input" value="50">
+    </div>
+
+    <div id="target-ratio-select-group" style="display:none;">
+      <label for="target-ratio-select">Target Ratio</label>
+      <select id="target-ratio-select" disabled></select>
+    </div>
+
+    <div id="jaccard-threshold-group">
+      <label for="jaccard-threshold-input">Jaccard Threshold</label>
+      <input type="number" step="0.1" name="jaccard_threshold" id="jaccard-threshold-input" value="0.5">
+    </div>
+
+    <div id="calibrate-iters-group">
+      <label for="calibrate-iters-input">标定轮数</label>
+      <input type="number" step="1" name="calibrate_iters" id="calibrate-iters-input" value="6">
+    </div>
+
+      <input type="hidden" name="purity_threshold" value="0.7">
+      <div id="similarity-weighted-feature-group">
+        <label for="similarity-weighted-feature-select">相似度加权特征聚合</label>
+        <select name="enable_similarity_weighted_features" id="similarity-weighted-feature-select">
+          <option value="false" selected>关闭，使用均值聚合</option>
+          <option value="true">开启，使用相似度加权聚合</option>
+        </select>
+        <input type="hidden" name="similarity_temperature" value="5.0">
+        <p class="note">开启后，仅替换 coarse feature 的生成方式；supernode 分组、coarse adjacency 和 coarse label 仍保持原始 UGC 逻辑。</p>
+      </div>
+
+    <button type="submit">开始运行</button>
+  </form>
+
+  <aside class="sidecard">
+    <div class="section-title">使用提示</div>
+    <ul class="flat-list">
+      {% if entry_mode == 'builtin' %}
+      <li>当前模式会直接使用系统内置数据集，不需要额外上传文件。</li>
+      <li>`Cora` 与 `Citeseer` 使用内置快捷流程；`facebook` 走完整 alpha、预处理与桶宽标定流程。</li>
+      {% else %}
+      <li>请先输入数据集名称，然后同时上传 `edgelist.txt`、`labels.txt` 和 `attrs.npz`。</li>
+      <li>实验记录和结果页会优先展示你输入的数据集名称。</li>
+      {% endif %}
+      <li>当前系统会先执行数据分析、数据清洗、alpha、预处理、bin width 标定，再完成 UGC 粗化与结果保存。</li>
+    </ul>
+    <div class="section-title">接下来会生成</div>
+    <ul class="flat-list">
+      <li>运行页：阶段状态、日志、中间结果</li>
+      <li>结果页：粗化概览、粗图预览、映射关系</li>
+      <li>GNN 测试页：后续单独选择模型和训练轮数再次测试</li>
+    </ul>
+  </aside>
+</section>
+
+<div class="loading-overlay" id="submit-loading-overlay" aria-hidden="true">
+  <div class="loading-overlay__panel">
+    <div class="loading-overlay__spinner" aria-hidden="true"></div>
+    <div class="loading-overlay__title">实验正在启动</div>
+    <div class="loading-overlay__text" id="loading-stage-text">正在创建实验并准备执行流程。</div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (() => {
+    const entryMode = {{ entry_mode|tojson }};
+    const builtinFastDatasets = {{ builtin_fast_datasets|tojson }};
+    const datasetLabelProfiles = {
+      facebook: 'multi',
+      cora: 'single',
+      citeseer: 'single',
+    };
+
+    const form = document.getElementById('experiment-form');
+    const datasetSelect = document.getElementById('dataset-select');
+    const datasetNameInput = document.getElementById('dataset-name-input');
+    const edgeFileInput = document.getElementById('edge-file-input');
+    const labelFileInput = document.getElementById('label-file-input');
+    const featureFileInput = document.getElementById('feature-file-input');
+    const labelTypeSelect = document.getElementById('label-type-select');
+    const strategyGroup = document.getElementById('strategy-group');
+    const strategySelect = document.getElementById('strategy-select');
+    const targetRatioInput = document.getElementById('target-ratio-input');
+    const targetRatioInputGroup = document.getElementById('target-ratio-input-group');
+    const targetRatioSelectGroup = document.getElementById('target-ratio-select-group');
+    const targetRatioSelect = document.getElementById('target-ratio-select');
+    const calibrateItersGroup = document.getElementById('calibrate-iters-group');
+    const jaccardThresholdGroup = document.getElementById('jaccard-threshold-group');
+    const datasetNote = document.getElementById('builtin-dataset-note');
+    const loadingOverlay = document.getElementById('submit-loading-overlay');
+    const loadingStageText = document.getElementById('loading-stage-text');
+
+    if (!form || !labelTypeSelect || !strategyGroup || !strategySelect || !targetRatioInput || !targetRatioInputGroup || !targetRatioSelectGroup || !targetRatioSelect || !calibrateItersGroup || !jaccardThresholdGroup || !loadingOverlay || !loadingStageText) {
+      return;
+    }
+
+      const stageLabels = {
+        queued: '实验已创建，等待进入计算流程。',
+        analysis: '数据分析中',
+        cleaning: '数据清洗中',
+        alpha: 'alpha 计算中',
+        preprocess: '数据预处理中',
+        calibration: '桶宽标定中',
+      ugc: 'UGC 粗化中',
+      completed: '流程已完成，正在跳转页面。',
+    };
+
+    let pollingTimer = null;
+
+    const getCurrentDatasetKey = () => {
+      if (entryMode !== 'builtin' || !datasetSelect) {
+        return null;
+      }
+      return datasetSelect.value.toLowerCase();
+    };
+
+    const getCurrentLabelType = () => labelTypeSelect.value;
+
+    const renderStrategyMode = () => {
+      const shouldShowStrategy = getCurrentLabelType() === 'multi';
+      strategyGroup.style.display = shouldShowStrategy ? '' : 'none';
+      if (!shouldShowStrategy) {
+        strategySelect.value = 'v1';
+      }
+    };
+
+    const renderJaccardMode = (builtinConfig) => {
+      const shouldShow = !builtinConfig && getCurrentLabelType() === 'multi' && strategySelect.value === 'v4';
+      jaccardThresholdGroup.style.display = shouldShow ? '' : 'none';
+    };
+
+    const renderBuiltinDatasetMode = () => {
+      const normalizedDatasetKey = getCurrentDatasetKey();
+      const builtinConfig = normalizedDatasetKey ? builtinFastDatasets[normalizedDatasetKey] : null;
+      const profiledLabelType = normalizedDatasetKey ? datasetLabelProfiles[normalizedDatasetKey] : null;
+
+      if (profiledLabelType) {
+        labelTypeSelect.value = profiledLabelType;
+      }
+      labelTypeSelect.disabled = true;
+
+      if (!builtinConfig) {
+        if (datasetNote) {
+          datasetNote.style.display = 'none';
+        }
+        targetRatioInput.removeAttribute('min');
+        targetRatioInput.removeAttribute('max');
+        targetRatioInputGroup.style.display = '';
+        targetRatioInput.disabled = false;
+        targetRatioSelectGroup.style.display = 'none';
+        targetRatioSelect.disabled = true;
+        targetRatioSelect.innerHTML = '';
+        calibrateItersGroup.style.display = '';
+        renderStrategyMode();
+        renderJaccardMode(null);
+        return;
+      }
+
+      const ratios = builtinConfig.allowed_ratios || [];
+      targetRatioSelect.innerHTML = '';
+      ratios.forEach((ratio) => {
+        const option = document.createElement('option');
+        option.value = String(ratio);
+        option.textContent = `${ratio}%`;
+        targetRatioSelect.appendChild(option);
+      });
+      const currentValue = Number(targetRatioInput.value);
+      const selectedValue = ratios.includes(currentValue) ? currentValue : (ratios[0] || 50);
+      targetRatioInput.value = String(selectedValue);
+      targetRatioSelect.value = String(selectedValue);
+      targetRatioInputGroup.style.display = 'none';
+      targetRatioInput.disabled = true;
+      targetRatioSelectGroup.style.display = '';
+      targetRatioSelect.disabled = false;
+      calibrateItersGroup.style.display = 'none';
+      renderStrategyMode();
+      renderJaccardMode(builtinConfig);
+      if (datasetNote) {
+        datasetNote.style.display = 'block';
+        datasetNote.textContent = `${datasetSelect.value} 使用内置 UGC 数据流程：无需数据预处理与桶宽标定，仅支持压缩率 ${ratios.join('、')}。`;
+      }
+    };
+
+    const renderUploadMode = () => {
+      labelTypeSelect.disabled = false;
+      targetRatioInputGroup.style.display = '';
+      targetRatioInput.disabled = false;
+      targetRatioSelectGroup.style.display = 'none';
+      targetRatioSelect.disabled = true;
+      targetRatioSelect.innerHTML = '';
+      calibrateItersGroup.style.display = '';
+      renderStrategyMode();
+      renderJaccardMode(null);
+    };
+
+    targetRatioSelect.addEventListener('change', () => {
+      targetRatioInput.value = targetRatioSelect.value;
+    });
+
+    strategySelect.addEventListener('change', () => {
+      const builtinConfig = entryMode === 'builtin' ? builtinFastDatasets[getCurrentDatasetKey()] || null : null;
+      renderJaccardMode(builtinConfig);
+    });
+
+    labelTypeSelect.addEventListener('change', () => {
+      const builtinConfig = entryMode === 'builtin' ? builtinFastDatasets[getCurrentDatasetKey()] || null : null;
+      renderStrategyMode();
+      renderJaccardMode(builtinConfig);
+    });
+
+    if (datasetSelect) {
+      datasetSelect.addEventListener('change', renderBuiltinDatasetMode);
+    }
+
+    const setOverlayVisible = (visible) => {
+      loadingOverlay.classList.toggle('is-visible', visible);
+      loadingOverlay.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      document.body.classList.toggle('page-loading', visible);
+    };
+
+    const updateLoadingText = (state) => {
+      const currentStage = state?.current_stage || 'queued';
+      let stageText = stageLabels[currentStage] || '实验处理中';
+      const calibrationProgress = state?.stage_results?.calibration_progress;
+      const ugcProgress = state?.stage_results?.ugc_progress;
+      if (currentStage === 'calibration' && calibrationProgress && calibrationProgress.iteration) {
+        const total = calibrationProgress.iterations || '?';
+        const binWidth = typeof calibrationProgress.bin_width === 'number'
+          ? calibrationProgress.bin_width.toFixed(6)
+          : null;
+        const ratioText = typeof calibrationProgress.actual_ratio === 'number'
+          ? `，当前压缩率 ${calibrationProgress.actual_ratio.toFixed(2)}%`
+          : '';
+        const widthText = binWidth ? `，bin_width=${binWidth}` : '';
+        stageText = `桶宽标定中（第 ${calibrationProgress.iteration}/${total} 轮${widthText}${ratioText}）`;
+      } else if (currentStage === 'ugc' && ugcProgress && ugcProgress.substage) {
+        const ugcStageLabels = {
+          coarsening: 'UGC 粗化中',
+          spectral_metrics: '计算谱指标中',
+          mapping: '生成结果映射中',
+          exporting: '导出文件中',
+        };
+        stageText = ugcStageLabels[ugcProgress.substage] || stageText;
+      }
+      const statusText = state?.status === 'failed'
+        ? `流程失败：${state?.error || '请查看运行页日志。'}`
+        : stageText;
+      loadingStageText.textContent = statusText;
+    };
+
+    const stopPolling = () => {
+      if (pollingTimer) {
+        window.clearTimeout(pollingTimer);
+        pollingTimer = null;
+      }
+    };
+
+    const pollExperimentState = async (stateUrl, runningUrl) => {
+      try {
+        const response = await fetch(stateUrl, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          throw new Error('状态获取失败');
+        }
+        const state = await response.json();
+        updateLoadingText(state);
+        if (state.status === 'completed' || state.status === 'failed') {
+          stopPolling();
+          window.location.href = runningUrl;
+          return;
+        }
+        pollingTimer = window.setTimeout(() => pollExperimentState(stateUrl, runningUrl), 1000);
+      } catch (error) {
+        stopPolling();
+        loadingStageText.textContent = '状态读取失败，正在跳转运行页。';
+        window.setTimeout(() => {
+          window.location.href = runningUrl;
+        }, 600);
+      }
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (entryMode === 'upload') {
+        const uploadedCount = [edgeFileInput, labelFileInput, featureFileInput].filter((input) => input && input.files && input.files.length > 0).length;
+        if (uploadedCount !== 3) {
+          window.alert('上传的数据集不完整：请同时上传边集、标签和特征三个文件。');
+          return;
+        }
+        if (!datasetNameInput || !datasetNameInput.value.trim()) {
+          window.alert('请先填写数据集名称。');
+          return;
+        }
+      }
+
+      setOverlayVisible(true);
+      loadingStageText.textContent = '正在创建实验并准备执行流程。';
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Accept: 'application/json',
+          },
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || '实验创建失败');
+        }
+        if (!payload.ok || !payload.state_url || !payload.running_url) {
+          throw new Error('实验启动失败');
+        }
+        pollExperimentState(payload.state_url, payload.running_url);
+      } catch (error) {
+        stopPolling();
+        setOverlayVisible(false);
+        window.alert(error.message || '实验启动失败，请稍后重试。');
+      }
+    });
+
+    if (entryMode === 'builtin') {
+      renderBuiltinDatasetMode();
+    } else {
+      renderUploadMode();
+    }
+  })();
+</script>
+{% endblock %}

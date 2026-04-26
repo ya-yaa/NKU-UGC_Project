@@ -1,0 +1,25 @@
+# 数据集目录
+/Datasets/
+/datasets/
+
+# 任意位置的 data 文件夹
+data/
+**/data/
+
+# 输入输出
+/UGC_SYStem/uploads/
+/UGC_SYStem/outputs/
+
+# Python 缓存
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# 模型和数据文件
+*.pt
+*.pth
+*.npz
+*.npy
+*.pkl
+*.pickle

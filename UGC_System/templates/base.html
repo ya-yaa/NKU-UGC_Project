@@ -1,0 +1,29 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UGC Visual System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://unpkg.com/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="{{ url_for('cover_page') }}">UGC System</a>
+      <nav class="nav">
+        <a href="{{ url_for('cover_page') }}">封面页</a>
+        <a href="{{ url_for('upload_page') }}">内置数据集</a>
+        <a href="{{ url_for('upload_page', entry_mode='upload') }}">上传数据集</a>
+      </nav>
+    </div>
+  </header>
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='js/graph_view.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/result_chart.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
