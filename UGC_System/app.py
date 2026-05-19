@@ -13,11 +13,19 @@ from algorithms.gnn_service import GNNService
 from algorithms.pipeline import UGCPipeline
 from algorithms.utils import ensure_dir, read_json, slugify, timestamp_slug, write_json
 from config import DATA_DIR, OUTPUTS_DIR, UPLOADS_DIR
+from database import get_experiment_repository
+from database.repository import (
+    ExperimentCreatePayload,
+    ExperimentUpdatePayload,
+    GNNTestCreatePayload,
+    GNNTestUpdatePayload,
+)
 
 
 app = Flask(__name__)
 pipeline = UGCPipeline()
 gnn_service = GNNService()
+experiment_repo = get_experiment_repository()
 
 
 def render_upload_config(entry_mode: str, error: str | None = None):
@@ -102,16 +110,140 @@ def load_mapping_payload(run_id: str) -> dict:
     return saved_mapping
 
 
-def list_gnn_tests(run_id: str) -> list[dict]:
+def normalize_ratio(value: float | int | None) -> float | None:
+    if value is None:
+        return None
+    numeric = float(value)
+    if numeric > 1.0:
+        return numeric / 100.0
+    return numeric
+
+
+def get_experiment_id(state: dict | None = None, summary: dict | None = None) -> int | None:
+    if state and state.get("experiment_id") is not None:
+        return int(state["experiment_id"])
+    if summary and summary.get("experiment_id") is not None:
+        return int(summary["experiment_id"])
+    return None
+
+
+def load_experiment_summary(run_id: str) -> dict | None:
+    summary = read_json(summary_path(run_id), default=None)
+    if summary is None:
+        return None
+    if "experiment_id" not in summary:
+        state = load_state(run_id)
+        experiment_id = get_experiment_id(state=state)
+        if experiment_id is not None:
+            summary["experiment_id"] = experiment_id
+    return summary
+
+
+def build_gnn_log_path(run_id: str, test_id: str) -> Path:
+    return experiment_dir(run_id) / "gnn_tests" / f"{test_id}.log"
+
+
+def read_text_file(path_text: str | None) -> str:
+    if not path_text:
+        return ""
+    path = Path(path_text)
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8", errors="ignore")
+
+
+def build_experiment_create_payload(run_id: str, dataset_display_name: str, form_data: dict) -> ExperimentCreatePayload:
+    return ExperimentCreatePayload(
+        run_id=run_id,
+        dataset_name=dataset_display_name,
+        label_type=form_data["label_type"],
+        label_strategy=form_data["strategy"].upper(),
+        target_ratio=normalize_ratio(form_data["target_ratio"]) or 0.0,
+        use_weighted_feature=bool(form_data.get("enable_similarity_weighted_features", False)),
+        gamma=float(form_data["similarity_temperature"]) if form_data.get("enable_similarity_weighted_features", False) else None,
+        alpha=None,
+        bin_width=None,
+        actual_ratio=None,
+        avg_eigen_error=None,
+        de_error=None,
+        avg_purity=None,
+        low_purity_ratio=None,
+        status="pending",
+        result_path=str(experiment_dir(run_id)),
+    )
+
+
+def build_experiment_update_payload(run_id: str, state: dict, summary_payload: dict | None = None, status: str | None = None) -> ExperimentUpdatePayload:
+    summary_payload = summary_payload or read_json(summary_path(run_id), default={}) or {}
+    spectral_metrics = read_json(experiment_dir(run_id) / "spectral_metrics.json", default={}) or {}
+    coarse_graph = read_json(experiment_dir(run_id) / "coarse_graph.json", default={}) or {}
+    coarse_meta = coarse_graph.get("meta") or {}
+    form_data = state.get("form_data", {})
+
+    return ExperimentUpdatePayload(
+        label_type=form_data.get("label_type"),
+        label_strategy=(form_data.get("strategy") or "").upper() or None,
+        target_ratio=normalize_ratio(form_data.get("target_ratio")),
+        use_weighted_feature=bool(form_data.get("enable_similarity_weighted_features", False)),
+        gamma=float(form_data["similarity_temperature"]) if form_data.get("enable_similarity_weighted_features", False) else None,
+        alpha=(summary_payload.get("alpha") or {}).get("alpha"),
+        bin_width=(summary_payload.get("calibration") or {}).get("recommended_bin_width"),
+        actual_ratio=normalize_ratio((summary_payload.get("ugc") or {}).get("reduction_percent")),
+        avg_eigen_error=spectral_metrics.get("eigen_error_mean"),
+        de_error=spectral_metrics.get("dirichlet_energy"),
+        avg_purity=coarse_meta.get("average_purity"),
+        low_purity_ratio=coarse_meta.get("low_purity_ratio"),
+        status=status or state.get("status"),
+        result_path=str(experiment_dir(run_id)),
+    )
+
+
+def sync_experiment_record(run_id: str, state: dict, summary_payload: dict | None = None, status: str | None = None) -> None:
+    experiment_id = get_experiment_id(state=state, summary=summary_payload)
+    if experiment_id is None:
+        return
+    payload = build_experiment_update_payload(run_id, state=state, summary_payload=summary_payload, status=status)
+    experiment_repo.update_experiment(experiment_id, payload)
+
+
+def list_gnn_tests(run_id: str, experiment_id: int | None = None) -> list[dict]:
+    summary = load_experiment_summary(run_id) or {}
+    state = load_state(run_id)
+    experiment_id = experiment_id if experiment_id is not None else get_experiment_id(state=state, summary=summary)
+    tests: list[dict] = []
+
+    if experiment_id is not None:
+        rows = experiment_repo.list_gnn_test_results(experiment_id)
+        for row in rows:
+            log_path = row.get("log_path")
+            tests.append(
+                {
+                    "id": row.get("id"),
+                    "test_id": row.get("test_id") or f"db_{row.get('id')}",
+                    "model_type": (row.get("model_name") or "").lower(),
+                    "model_name": row.get("model_name"),
+                    "epochs": row.get("epochs"),
+                    "status": row.get("status"),
+                    "log_path": log_path,
+                    "result": {
+                        "average_accuracy": row.get("accuracy"),
+                        "average_time": row.get("train_time"),
+                        "reduction_percent": (normalize_ratio((summary.get("ugc") or {}).get("reduction_percent")) or 0.0) * 100.0,
+                        "stdout": read_text_file(log_path),
+                    },
+                }
+            )
+        if tests:
+            return tests
+
     test_dir = experiment_dir(run_id) / "gnn_tests"
     if not test_dir.exists():
         return []
-    results = []
     for path in sorted(test_dir.glob("*.json"), reverse=True):
         payload = read_json(path, {})
         payload["filename"] = path.name
-        results.append(payload)
-    return results
+        tests.append(payload)
+    return tests
 
 
 def export_dir(run_id: str, export_kind: str) -> Path:
@@ -134,9 +266,10 @@ def load_gnn_state(run_id: str) -> dict:
     return read_json(gnn_state_path(run_id), default={}) or {}
 
 
-def create_initial_state(run_id: str, form_data: dict, dataset: str, dataset_display_name: str, data_root: str, entry_mode: str) -> dict:
+def create_initial_state(run_id: str, form_data: dict, dataset: str, dataset_display_name: str, data_root: str, entry_mode: str, experiment_id: int | None = None) -> dict:
     return {
         "run_id": run_id,
+        "experiment_id": experiment_id,
         "status": "pending",
         "current_stage": "queued",
         "execution_started": False,
@@ -169,6 +302,7 @@ def execute_experiment(run_id: str) -> None:
     state["current_stage"] = "analysis"
     state.setdefault("log_lines", []).append("开始执行统一流程。")
     save_state(run_id, state)
+    sync_experiment_record(run_id, state=state, status="running")
 
     def update_stage(stage: str, payload: dict) -> None:
         latest_state = load_state(run_id)
@@ -208,13 +342,19 @@ def execute_experiment(run_id: str) -> None:
         summary_payload = read_json(summary_file, default={}) or {}
         summary_payload["dataset_display_name"] = state.get("dataset_display_name", result.dataset)
         summary_payload["entry_mode"] = state.get("entry_mode")
+        experiment_id = get_experiment_id(state=state)
+        if experiment_id is not None:
+            summary_payload["experiment_id"] = experiment_id
         write_json(summary_file, summary_payload)
+        completed_state = load_state(run_id)
+        sync_experiment_record(run_id, state=completed_state, summary_payload=summary_payload, status="completed")
     except Exception as exc:
         failed_state = load_state(run_id)
         failed_state["status"] = "failed"
         failed_state["error"] = str(exc)
         failed_state.setdefault("log_lines", []).append(f"流程失败: {exc}")
         save_state(run_id, failed_state)
+        sync_experiment_record(run_id, state=failed_state, status="failed")
 
 
 def start_experiment_in_background(run_id: str) -> None:
@@ -223,13 +363,33 @@ def start_experiment_in_background(run_id: str) -> None:
 
 
 def execute_gnn_test(run_id: str, model_type: str, epochs: int) -> None:
-    summary = read_json(summary_path(run_id), default=None)
+    summary = load_experiment_summary(run_id)
     if not summary:
         save_gnn_state(run_id, {"status": "failed", "error": "Missing experiment summary."})
         return
 
+    experiment_id = get_experiment_id(summary=summary, state=load_state(run_id))
+    test_id = f"gnn_{timestamp_slug()}"
+    log_path = str(build_gnn_log_path(run_id, test_id))
+    db_test_id = None
+    if experiment_id is not None:
+        db_test_id = experiment_repo.create_gnn_test_result(
+            GNNTestCreatePayload(
+                experiment_id=experiment_id,
+                model_name=model_type.upper(),
+                epochs=epochs,
+                accuracy=None,
+                train_time=None,
+                status="running",
+                log_path=log_path,
+            )
+        )
+
     state = {
         "status": "running",
+        "test_id": test_id,
+        "db_test_id": db_test_id,
+        "log_path": log_path,
         "model_type": model_type,
         "epochs": epochs,
         "current_epoch": 0,
@@ -272,17 +432,36 @@ def execute_gnn_test(run_id: str, model_type: str, epochs: int) -> None:
         if ugc_result.return_code != 0:
             raise RuntimeError(ugc_result.stderr.strip() or ugc_result.stdout.strip() or "GNN test failed.")
         test_payload = {
-            "test_id": f"gnn_{timestamp_slug()}",
+            "id": db_test_id,
+            "test_id": test_id,
             "model_type": model_type,
             "epochs": epochs,
+            "status": "completed",
+            "log_path": log_path,
             "result": asdict(ugc_result),
         }
         test_dir = ensure_dir(experiment_dir(run_id) / "gnn_tests")
+        Path(log_path).write_text(ugc_result.stdout, encoding="utf-8")
         write_json(test_dir / f"{test_payload['test_id']}.json", test_payload)
+        if db_test_id is not None:
+            experiment_repo.update_gnn_test_result(
+                db_test_id,
+                GNNTestUpdatePayload(
+                    model_name=model_type.upper(),
+                    epochs=epochs,
+                    accuracy=ugc_result.average_accuracy,
+                    train_time=ugc_result.average_time,
+                    status="completed",
+                    log_path=log_path,
+                ),
+            )
         save_gnn_state(
             run_id,
             {
                 "status": "completed",
+                "test_id": test_id,
+                "db_test_id": db_test_id,
+                "log_path": log_path,
                 "model_type": model_type,
                 "epochs": epochs,
                 "current_epoch": epochs,
@@ -295,6 +474,19 @@ def execute_gnn_test(run_id: str, model_type: str, epochs: int) -> None:
         failed["status"] = "failed"
         failed["error"] = str(exc)
         save_gnn_state(run_id, failed)
+        log_path = failed.get("log_path")
+        if log_path:
+            Path(log_path).write_text(str(exc), encoding="utf-8")
+        if failed.get("db_test_id") is not None:
+            experiment_repo.update_gnn_test_result(
+                int(failed["db_test_id"]),
+                GNNTestUpdatePayload(
+                    model_name=model_type.upper(),
+                    epochs=epochs,
+                    status="failed",
+                    log_path=log_path,
+                ),
+            )
 
 
 def start_gnn_test_in_background(run_id: str, model_type: str, epochs: int) -> None:
@@ -379,7 +571,10 @@ def create_experiment():
         if wants_json:
             return jsonify({"ok": False, "error": f"{dataset} 仅支持压缩率 {allowed}。"}), 400
         return render_upload_config(entry_mode=entry_mode, error=f"{dataset_display_name} 仅支持压缩率 {allowed}。")
-    save_state(run_id, create_initial_state(run_id, form_data, dataset, dataset_display_name, str(data_root), entry_mode))
+    experiment_id = experiment_repo.create_experiment(
+        build_experiment_create_payload(run_id=run_id, dataset_display_name=dataset_display_name, form_data=form_data)
+    )
+    save_state(run_id, create_initial_state(run_id, form_data, dataset, dataset_display_name, str(data_root), entry_mode, experiment_id=experiment_id))
     if wants_json:
         start_experiment_in_background(run_id)
         return jsonify(
@@ -451,7 +646,7 @@ def running_page(run_id: str):
 
 @app.route("/experiments/<run_id>/result", methods=["GET"])
 def result_page(run_id: str):
-    summary = read_json(summary_path(run_id), default=None)
+    summary = load_experiment_summary(run_id)
     if not summary:
         return redirect(url_for("running_page", run_id=run_id))
     state = load_state(run_id)
@@ -467,7 +662,7 @@ def result_page(run_id: str):
         mapping_note="点击 coarse supernode 或 coarse edge 后，将按需加载对应的原图局部映射。",
         mapping_node_url_template=url_for("experiment_mapping_node", run_id=run_id, supernode_id="__SUPERNODE_ID__"),
         mapping_edge_url_template=url_for("experiment_mapping_edge", run_id=run_id, edge_id="__EDGE_ID__"),
-        gnn_tests=list_gnn_tests(run_id),
+        gnn_tests=list_gnn_tests(run_id, experiment_id=get_experiment_id(state=state, summary=summary)),
     )
 
 
@@ -485,7 +680,7 @@ def download_export(run_id: str, export_kind: str):
 
 @app.route("/experiments/<run_id>/gnn", methods=["GET", "POST"])
 def gnn_test_page(run_id: str):
-    summary = read_json(summary_path(run_id), default=None)
+    summary = load_experiment_summary(run_id)
     if not summary:
         return redirect(url_for("running_page", run_id=run_id))
 
@@ -515,7 +710,7 @@ def gnn_test_page(run_id: str):
             )
         return redirect(url_for("gnn_test_page", run_id=run_id))
 
-    tests = list_gnn_tests(run_id)
+    tests = list_gnn_tests(run_id, experiment_id=get_experiment_id(summary=summary, state=load_state(run_id)))
     latest_test = tests[0] if tests else None
     return render_template(
         "gnn_test.html",
